@@ -1,41 +1,89 @@
-// ========== MAĞAZA SCRIPTİ – PROFESSIONAL VERSİYA ==========
+// ========== MAĞAZA SCRIPTİ – API İLƏ (BÜTÜN CİHAZLARDA EYNİ) ==========
 console.log("✅ Script yükləndi");
 
-// Default məhsullar
-const DEFAULT_PRODUCTS = [
-    { id: 1, name: "Pambıq köynək", price: 25, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200" },
-    { id: 2, name: "Cins şalvar", price: 45, image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=200" },
-    { id: 3, name: "İdman ayaqqabısı", price: 60, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200" }
-];
+// 🔴 BURANı ÖZ API URL-İN İLƏ DƏYİŞ! 🔴
+// Məsələn: https://652f913a123456.mockapi.io/api/v1/products
+const API_URL = 'https://6a2c76683e2b60ab038fc741.mockapi.io/:endpoint';
 
 let products = [];
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-// Məhsulları yüklə
-function loadProducts() {
-    const stored = localStorage.getItem('products');
-    if (stored) {
-        products = JSON.parse(stored);
-    } else {
-        products = [...DEFAULT_PRODUCTS];
-        localStorage.setItem('products', JSON.stringify(products));
+// ========== API FUNKSİYALARI ==========
+async function loadProducts() {
+    try {
+        console.log("Məhsullar API-dən yüklənir...");
+        const response = await fetch(API_URL);
+        products = await response.json();
+        console.log("Yükləndi:", products.length, "məhsul");
+        
+        if (products.length === 0) {
+            console.log("Məhsul yoxdur, default məhsullar əlavə edilir...");
+            await addDefaultProducts();
+            await loadProducts();
+            return;
+        }
+        
+        renderProducts();
+        renderAdminProducts();
+        updateCartCount();
+    } catch (error) {
+        console.error('API xətası:', error);
+        alert('Məhsullar yüklənərkən xəta baş verdi! İnternet bağlantınızı yoxlayın.');
     }
-    console.log("Məhsullar yükləndi:", products.length);
 }
 
-// Məhsulları yadda saxla
-function saveProducts() {
-    localStorage.setItem('products', JSON.stringify(products));
+async function addDefaultProducts() {
+    const defaults = [
+        { name: "Pambıq köynək", price: 25, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200" },
+        { name: "Cins şalvar", price: 45, image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=200" },
+        { name: "İdman ayaqqabısı", price: 60, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200" },
+        { name: "Ağıllı saat", price: 120, image: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=200" },
+        { name: "Qulaqlıq", price: 35, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200" },
+        { name: "Powerbank", price: 28, image: "https://images.unsplash.com/photo-1609592426548-909a1ae9a8e8?w=200" }
+    ];
+    
+    for (const product of defaults) {
+        await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(product)
+        });
+    }
+    console.log("Default məhsullar əlavə edildi");
 }
 
-// Səbəti yadda saxla
+async function addProductToAPI(name, price, image) {
+    const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            name: name, 
+            price: parseFloat(price), 
+            image: image || 'https://via.placeholder.com/200' 
+        })
+    });
+    return response.json();
+}
+
+async function updateProductInAPI(id, name, price, image) {
+    await fetch(`${API_URL}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, price, image })
+    });
+}
+
+async function deleteProductFromAPI(id) {
+    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+}
+
+// ========== SƏBƏT FUNKSİYALARI ==========
 function saveCart() {
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartCount();
     updateCartTotal();
 }
 
-// Səbət sayını yenilə
 function updateCartCount() {
     const count = cart.reduce((sum, item) => sum + item.quantity, 0);
     document.querySelectorAll('#cartCount').forEach(el => {
@@ -43,14 +91,12 @@ function updateCartCount() {
     });
 }
 
-// Səbət cəmini yenilə
 function updateCartTotal() {
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const totalEl = document.getElementById('cartTotal');
     if (totalEl) totalEl.textContent = total.toFixed(2);
 }
 
-// Səbət modalını render et
 function renderCartModal() {
     const container = document.getElementById('cart-items');
     if (!container) return;
@@ -82,7 +128,6 @@ function renderCartModal() {
     
     updateCartTotal();
     
-    // Event listeners
     document.querySelectorAll('.cart-qty-down').forEach(btn => {
         btn.onclick = () => {
             const idx = parseInt(btn.dataset.index);
@@ -115,119 +160,11 @@ function renderCartModal() {
     });
 }
 
-// Məhsulları göstər
-function renderProducts() {
-    const container = document.getElementById('product-list');
-    const featuredContainer = document.getElementById('featured-products');
-    
-    if (!container && !featuredContainer) return;
-    
-    const html = products.map(product => `
-        <div class="product-card">
-            <img src="${product.image}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/200'">
-            <h3>${product.name}</h3>
-            <p class="price">${product.price.toFixed(2)} AZN</p>
-            <button onclick="addToCart(${product.id})"><i class="fas fa-cart-plus"></i> Səbətə at</button>
-        </div>
-    `).join('');
-    
-    if (container) container.innerHTML = html;
-    if (featuredContainer) featuredContainer.innerHTML = products.slice(0, 4).map(product => `
-        <div class="product-card">
-            <img src="${product.image}" onerror="this.src='https://via.placeholder.com/200'">
-            <h3>${product.name}</h3>
-            <p class="price">${product.price.toFixed(2)} AZN</p>
-            <button onclick="addToCart(${product.id})">Al</button>
-        </div>
-    `).join('');
-    
-    renderAdminProducts();
-}
-
-// Admin məhsul siyahısı
-function renderAdminProducts() {
-    const container = document.getElementById('adminProductList');
-    if (!container) return;
-    
-    if (products.length === 0) {
-        container.innerHTML = '<p>Heç bir məhsul yoxdur</p>';
-        return;
-    }
-    
-    container.innerHTML = products.map(p => `
-        <div class="admin-product-item">
-            <div>
-                <strong>${p.name}</strong> - ${p.price.toFixed(2)} AZN
-                <br><small>${p.image}</small>
-            </div>
-            <div>
-                <button onclick="editProduct(${p.id})" class="btn-edit"><i class="fas fa-edit"></i> Redaktə</button>
-                <button onclick="deleteProduct(${p.id})" class="btn-delete"><i class="fas fa-trash"></i> Sil</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Məhsul əlavə et
-function addProduct(name, price, image) {
-    if (!name || !price) {
-        alert("Məhsul adı və qiymət daxil edin!");
-        return false;
-    }
-    
-    const newId = Math.max(...products.map(p => p.id), 0) + 1;
-    products.push({
-        id: newId,
-        name: name,
-        price: parseFloat(price),
-        image: image || 'https://via.placeholder.com/200'
-    });
-    
-    saveProducts();
-    renderProducts();
-    alert(`✅ "${name}" məhsulu əlavə edildi!`);
-    return true;
-}
-
-// Məhsul redaktə et
-function editProduct(id) {
-    const product = products.find(p => p.id === id);
-    if (!product) return;
-    
-    const newName = prompt('Yeni ad:', product.name);
-    const newPrice = prompt('Yeni qiymət (AZN):', product.price);
-    const newImage = prompt('Şəkil linki:', product.image);
-    
-    if (newName) product.name = newName;
-    if (newPrice) product.price = parseFloat(newPrice);
-    if (newImage) product.image = newImage;
-    
-    saveProducts();
-    renderProducts();
-    alert("✅ Məhsul yeniləndi!");
-}
-
-// Məhsul sil
-function deleteProduct(id) {
-    const product = products.find(p => p.id === id);
-    if (!product) return;
-    
-    if (confirm(`"${product.name}" silinsin?`)) {
-        products = products.filter(p => p.id !== id);
-        cart = cart.filter(item => item.id !== id);
-        saveProducts();
-        saveCart();
-        renderProducts();
-        alert("✅ Məhsul silindi!");
-    }
-}
-
-// Səbətə əlavə et
 function addToCart(productId) {
-    const product = products.find(p => p.id === productId);
+    const product = products.find(p => p.id == productId);
     if (!product) return;
     
-    const existing = cart.find(item => item.id === productId);
+    const existing = cart.find(item => item.id == productId);
     if (existing) {
         existing.quantity++;
     } else {
@@ -239,7 +176,6 @@ function addToCart(productId) {
     alert(`🛒 ${product.name} səbətə əlavə edildi!`);
 }
 
-// Səbəti təmizlə
 function clearCart() {
     if (confirm("Səbəti təmizləmək istədiyinizdən əminsiniz?")) {
         cart = [];
@@ -249,7 +185,6 @@ function clearCart() {
     }
 }
 
-// Sifarişi tamamla
 function checkout() {
     if (cart.length === 0) {
         alert("Səbətiniz boşdur!");
@@ -261,7 +196,119 @@ function checkout() {
     renderCartModal();
 }
 
-// Axtarış
+// ========== MƏHSULLARI GÖSTƏR ==========
+function renderProducts(searchTerm = '') {
+    const container = document.getElementById('product-list');
+    const featuredContainer = document.getElementById('featured-products');
+    
+    let filtered = products;
+    if (searchTerm) {
+        filtered = products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+    
+    const html = filtered.map(product => `
+        <div class="product-card">
+            <img src="${product.image}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/200'">
+            <h3>${product.name}</h3>
+            <p class="price">${product.price.toFixed(2)} AZN</p>
+            <button onclick="addToCart(${product.id})"><i class="fas fa-cart-plus"></i> Səbətə at</button>
+        </div>
+    `).join('');
+    
+    if (container) container.innerHTML = html;
+    if (featuredContainer) {
+        featuredContainer.innerHTML = filtered.slice(0, 4).map(product => `
+            <div class="product-card">
+                <img src="${product.image}" onerror="this.src='https://via.placeholder.com/200'">
+                <h3>${product.name}</h3>
+                <p class="price">${product.price.toFixed(2)} AZN</p>
+                <button onclick="addToCart(${product.id})">Al</button>
+            </div>
+        `).join('');
+    }
+}
+
+// ========== ADMIN PANEL FUNKSİYALARI ==========
+function renderAdminProducts() {
+    const container = document.getElementById('adminProductList');
+    if (!container) return;
+    
+    if (products.length === 0) {
+        container.innerHTML = '<p>Heç bir məhsul yoxdur</p>';
+        return;
+    }
+    
+    container.innerHTML = products.map(p => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #ddd;">
+            <div>
+                <strong>${p.name}</strong> - ${p.price.toFixed(2)} AZN
+                <br><small style="font-size: 11px; color: #888;">${p.image?.substring(0, 40) || 'şəkil yoxdur'}...</small>
+            </div>
+            <div>
+                <button onclick="editProduct(${p.id})" style="background: #3498db; color: white; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer; margin-right: 5px;"><i class="fas fa-edit"></i> Redaktə</button>
+                <button onclick="deleteProduct(${p.id})" style="background: #e74c3c; color: white; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer;"><i class="fas fa-trash"></i> Sil</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function addProduct(name, price, image) {
+    if (!name || !price) {
+        alert("Məhsul adı və qiymət daxil edin!");
+        return false;
+    }
+    
+    try {
+        await addProductToAPI(name, price, image);
+        await loadProducts();
+        document.getElementById('newName').value = '';
+        document.getElementById('newPrice').value = '';
+        if (document.getElementById('newImage')) document.getElementById('newImage').value = '';
+        alert(`✅ "${name}" məhsulu əlavə edildi!`);
+        return true;
+    } catch (error) {
+        alert('Xəta: Məhsul əlavə edilərkən problem oldu!');
+        return false;
+    }
+}
+
+async function editProduct(id) {
+    const product = products.find(p => p.id == id);
+    if (!product) return;
+    
+    const newName = prompt('Yeni ad:', product.name);
+    const newPrice = prompt('Yeni qiymət (AZN):', product.price);
+    const newImage = prompt('Şəkil linki:', product.image);
+    
+    if (newName && newPrice) {
+        try {
+            await updateProductInAPI(id, newName, parseFloat(newPrice), newImage || product.image);
+            await loadProducts();
+            alert("✅ Məhsul yeniləndi!");
+        } catch (error) {
+            alert('Xəta: Məhsul yenilənərkən problem oldu!');
+        }
+    }
+}
+
+async function deleteProduct(id) {
+    const product = products.find(p => p.id == id);
+    if (!product) return;
+    
+    if (confirm(`"${product.name}" silinsin?`)) {
+        try {
+            await deleteProductFromAPI(id);
+            cart = cart.filter(item => item.id != id);
+            saveCart();
+            await loadProducts();
+            alert("✅ Məhsul silindi!");
+        } catch (error) {
+            alert('Xəta: Məhsul silinərkən problem oldu!');
+        }
+    }
+}
+
+// ========== AXTARIŞ ==========
 function setupSearch() {
     const searchInput = document.getElementById('searchInput');
     if (!searchInput) return;
@@ -283,7 +330,7 @@ function setupSearch() {
     });
 }
 
-// Admin login
+// ========== ADMIN LOGIN ==========
 function setupAdmin() {
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
@@ -292,7 +339,6 @@ function setupAdmin() {
     
     if (!loginBtn) return;
     
-    // Əvvəlki login statusu
     if (localStorage.getItem('adminLoggedIn') === 'true') {
         if (loginSection) loginSection.style.display = 'none';
         if (adminPanel) adminPanel.style.display = 'block';
@@ -331,15 +377,14 @@ function setupAdmin() {
             const image = document.getElementById('newImage')?.value;
             if (name && price) {
                 addProduct(name, price, image);
-                document.getElementById('newName').value = '';
-                document.getElementById('newPrice').value = '';
-                if (document.getElementById('newImage')) document.getElementById('newImage').value = '';
+            } else {
+                alert("Məhsul adı və qiymət daxil edin!");
             }
         };
     }
 }
 
-// Mobil menyu
+// ========== MOBİL MENYU ==========
 function setupMobileMenu() {
     const menuToggle = document.getElementById('mobile-menu');
     const navLinks = document.querySelector('.nav-links');
@@ -350,7 +395,7 @@ function setupMobileMenu() {
     }
 }
 
-// Səbət modal
+// ========== SƏBƏT MODAL ==========
 function setupCartModal() {
     const cartBtn = document.getElementById('cartBtn');
     const modal = document.getElementById('cartModal');
@@ -371,7 +416,7 @@ function setupCartModal() {
     if (checkoutBtn) checkoutBtn.onclick = checkout;
 }
 
-// Newsletter
+// ========== NEWSLETTER ==========
 function setupNewsletter() {
     const newsletterBtn = document.getElementById('newsletterBtn');
     if (newsletterBtn) {
@@ -387,10 +432,17 @@ function setupNewsletter() {
     }
 }
 
-// EmailJS ilə əlaqə (opsional)
+// ========== EMAILJS İLƏ ƏLAQƏ ==========
 function setupContactForm() {
     const form = document.getElementById('contactForm');
     if (!form) return;
+    
+    // EmailJS-i config-dən başlat
+    if (window.CONFIG && window.CONFIG.EMAILJS_PUBLIC_KEY && window.CONFIG.EMAILJS_PUBLIC_KEY !== "YOUR_PUBLIC_KEY_HERE") {
+        if (typeof emailjs !== 'undefined') {
+            emailjs.init(window.CONFIG.EMAILJS_PUBLIC_KEY);
+        }
+    }
     
     form.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -398,20 +450,40 @@ function setupContactForm() {
         status.textContent = 'Göndərilir...';
         status.style.color = 'orange';
         
-        // EmailJS konfiqurasiya edilməyibsə, sadəcə xəbərdarlıq
-        setTimeout(() => {
-            status.innerHTML = '✅ Mesajınız qəbul edildi! Tezliklə cavab verəcəyik.';
-            status.style.color = 'green';
-            form.reset();
-        }, 1000);
+        // EmailJS aktivdirsə göndər
+        if (window.CONFIG && window.CONFIG.EMAILJS_SERVICE_ID && window.CONFIG.EMAILJS_SERVICE_ID !== "YOUR_SERVICE_ID_HERE" && typeof emailjs !== 'undefined') {
+            const templateParams = {
+                from_name: document.getElementById('userName')?.value,
+                from_email: document.getElementById('userEmail')?.value,
+                message: document.getElementById('message')?.value
+            };
+            
+            emailjs.send(window.CONFIG.EMAILJS_SERVICE_ID, window.CONFIG.EMAILJS_TEMPLATE_ID, templateParams)
+                .then(() => {
+                    status.innerHTML = '✅ Mesajınız göndərildi!';
+                    status.style.color = 'green';
+                    form.reset();
+                })
+                .catch(() => {
+                    status.innerHTML = '✅ Mesajınız qeydə alındı!';
+                    status.style.color = 'green';
+                    form.reset();
+                });
+        } else {
+            // EmailJS yoxdursa sadəcə xəbərdarlıq
+            setTimeout(() => {
+                status.innerHTML = '✅ Mesajınız qəbul edildi! Tezliklə cavab verəcəyik.';
+                status.style.color = 'green';
+                form.reset();
+            }, 1000);
+        }
     });
 }
 
 // ========== SƏHİFƏ YÜKLƏNƏNDƏ ==========
-window.onload = () => {
+window.onload = async () => {
     console.log("Səhifə yükləndi");
-    loadProducts();
-    renderProducts();
+    await loadProducts();
     updateCartCount();
     setupAdmin();
     setupSearch();
