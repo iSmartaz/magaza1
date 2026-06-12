@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ana səhifə | Mağazam</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <h1>🛍️ Mağazam</h1>
+    <button id="cartBtn" class="cart-icon">🛒 <span id="cartCount">0</span></button>
+</header>
+
+<nav>
+    <a href="index.html">Ana</a>
+    <a href="mehsullar.html">Məhsullar</a>
+    <a href="haqqimda.html">Haqqımızda</a>
+    <a href="elaqe.html">Əlaqə</a>
+    <a href="admin.html">Admin</a>
+</nav>
+
+<main>
+    <section class="hero">
+        <h2>Xoş gəldiniz!</h2>
+        <p>Ən keyfiyyətli məhsullar ən sərfəli qiymətlərlə</p>
+        <a href="mehsullar.html" class="btn">Alış-verişə başla</a>
+    </section>
+
+    <section class="featured">
+        <h3>Ən çox satılanlar</h3>
+        <div id="featured-products" class="product-grid"></div>
+    </section>
+</main>
+
+<footer>
+    <p>&copy; 2026 Mağazam. Bütün hüquqlar qorunur.</p>
+</footer>
+
+<script src="config.js"></script>
+<script src="data/products.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
