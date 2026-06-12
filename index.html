@@ -2,13 +2,22 @@
 <html lang="az">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Mağazam | Ən keyfiyyətli məhsullar</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a1a2e">
 </head>
 <body>
+
+<!-- Dark Mode Toggle -->
+<div class="dark-mode-toggle">
+    <button id="darkModeBtn" class="dark-mode-btn">
+        <i class="fas fa-moon"></i>
+    </button>
+</div>
 
 <!-- Navbar -->
 <nav class="navbar">
@@ -71,6 +80,34 @@
             <i class="fas fa-headset"></i>
             <h3>7/24 Dəstək</h3>
             <p>Müştəri xidmətləri</p>
+        </div>
+    </div>
+</section>
+
+<!-- Filter Section -->
+<section class="filter-section">
+    <div class="container">
+        <div class="filter-wrapper">
+            <div class="category-filters">
+                <h4>Kateqoriyalar</h4>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-category="all">Hamısı</button>
+                    <button class="filter-btn" data-category="electronics">Elektronika</button>
+                    <button class="filter-btn" data-category="clothing">Geyim</button>
+                    <button class="filter-btn" data-category="accessories">Aksessuarlar</button>
+                </div>
+            </div>
+            <div class="price-filter">
+                <h4>Qiymət aralığı</h4>
+                <div class="price-range">
+                    <input type="range" id="priceMin" min="0" max="500" value="0">
+                    <input type="range" id="priceMax" min="0" max="500" value="500">
+                    <div class="price-values">
+                        <span>0 AZN</span>
+                        <span>500+ AZN</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -144,6 +181,14 @@
         <button id="clearCartBtn" class="btn-clear"><i class="fas fa-trash"></i> Səbəti təmizlə</button>
         <button id="checkoutBtn" class="btn-checkout"><i class="fas fa-credit-card"></i> Sifarişi tamamla</button>
     </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast" class="toast"></div>
+
+<!-- Loading Spinner -->
+<div id="loadingSpinner" class="loading-spinner" style="display: none;">
+    <div class="spinner"></div>
 </div>
 
 <script src="script.js"></script>
