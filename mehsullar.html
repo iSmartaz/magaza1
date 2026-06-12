@@ -43,7 +43,29 @@
                 <input type="text" id="searchInput" placeholder="Məhsul axtar...">
             </div>
         </div>
+        
+        <!-- Filter Row -->
+        <div class="filter-row">
+            <div class="category-filter">
+                <button class="filter-chip active" data-cat="all">Hamısı</button>
+                <button class="filter-chip" data-cat="electronics">Elektronika</button>
+                <button class="filter-chip" data-cat="clothing">Geyim</button>
+                <button class="filter-chip" data-cat="accessories">Aksessuarlar</button>
+            </div>
+            <div class="sort-filter">
+                <select id="sortSelect">
+                    <option value="default">Sıralama</option>
+                    <option value="price-asc">Qiymət: Ucuz → Bahalı</option>
+                    <option value="price-desc">Qiymət: Bahalı → Ucuz</option>
+                    <option value="name-asc">Ad: A-Z</option>
+                </select>
+            </div>
+        </div>
+        
         <div id="product-list" class="product-grid"></div>
+        
+        <!-- Pagination -->
+        <div class="pagination" id="pagination"></div>
     </div>
 </main>
 
@@ -66,6 +88,9 @@
         <button id="checkoutBtn" class="btn-checkout"><i class="fas fa-credit-card"></i> Sifariş et</button>
     </div>
 </div>
+
+<div id="toast" class="toast"></div>
+<div id="loadingSpinner" class="loading-spinner" style="display: none;"><div class="spinner"></div></div>
 
 <script src="script.js"></script>
 </body>
