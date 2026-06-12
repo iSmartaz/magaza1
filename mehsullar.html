@@ -5,35 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Məhsullar | Mağazam</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 
-<header>
-    <h1>🛍️ Mağazam</h1>
-    <button id="cartBtn" class="cart-icon">🛒 <span id="cartCount">0</span></button>
-</header>
-
-<nav>
-    <a href="index.html">Ana</a>
-    <a href="mehsullar.html">Məhsullar</a>
-    <a href="haqqimda.html">Haqqımızda</a>
-    <a href="elaqe.html">Əlaqə</a>
-    <a href="admin.html">Admin</a>
+<nav class="navbar">
+    <div class="container">
+        <div class="logo">
+            <h1><i class="fas fa-store"></i> Mağazam</h1>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i> Ana</a></li>
+            <li><a href="mehsullar.html" class="active"><i class="fas fa-box"></i> Məhsullar</a></li>
+            <li><a href="haqqimda.html"><i class="fas fa-info-circle"></i> Haqqımızda</a></li>
+            <li><a href="elaqe.html"><i class="fas fa-envelope"></i> Əlaqə</a></li>
+            <li><a href="admin.html"><i class="fas fa-user-shield"></i> Admin</a></li>
+        </ul>
+        <div class="cart-icon-container">
+            <button id="cartBtn" class="cart-btn">
+                <i class="fas fa-shopping-cart"></i>
+                <span id="cartCount" class="cart-count">0</span>
+            </button>
+        </div>
+        <div class="menu-toggle" id="mobile-menu">
+            <i class="fas fa-bars"></i>
+        </div>
+    </div>
 </nav>
 
-<main>
-    <h2>Bütün məhsullar</h2>
-    
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="🔍 Məhsul axtar...">
+<main class="products-page">
+    <div class="container">
+        <div class="products-header">
+            <h2>Bütün Məhsullar</h2>
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Məhsul axtar...">
+            </div>
+        </div>
+        <div id="product-list" class="product-grid"></div>
     </div>
-
-    <div id="product-list" class="product-grid"></div>
 </main>
 
-<footer>
-    <p>&copy; 2026 Mağazam</p>
+<footer class="footer">
+    <div class="container">
+        <div class="footer-bottom">
+            <p>&copy; 2026 Mağazam. Bütün hüquqlar qorunur.</p>
+        </div>
+    </div>
 </footer>
+
+<!-- Cart Modal -->
+<div id="cartModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3><i class="fas fa-shopping-cart"></i> Səbətim</h3>
+        <div id="cart-items"></div>
+        <div class="cart-total"><strong>Cəmi: <span id="cartTotal">0</span> AZN</strong></div>
+        <button id="clearCartBtn" class="btn-clear"><i class="fas fa-trash"></i> Təmizlə</button>
+        <button id="checkoutBtn" class="btn-checkout"><i class="fas fa-credit-card"></i> Sifariş et</button>
+    </div>
+</div>
 
 <script src="script.js"></script>
 </body>
