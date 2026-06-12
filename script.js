@@ -3,7 +3,7 @@ console.log("✅ Script yükləndi");
 
 // 🔴 BURANı ÖZ API URL-İN İLƏ DƏYİŞ! 🔴
 // Məsələn: https://652f913a123456.mockapi.io/api/v1/products
-const API_URL = 'https://6a2c76683e2b60ab038fc741.mockapi.io/:endpoint';
+const API_URL = 'https://mockapi.io/clone/6a2c76683e2b60ab038fc742';
 
 let products = [];
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
