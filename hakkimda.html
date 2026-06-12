@@ -5,35 +5,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Haqqımızda | Mağazam</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 
-<header>
-    <h1>🛍️ Mağazam</h1>
-    <button id="cartBtn" class="cart-icon">🛒 <span id="cartCount">0</span></button>
-</header>
-
-<nav>
-    <a href="index.html">Ana</a>
-    <a href="mehsullar.html">Məhsullar</a>
-    <a href="haqqimda.html">Haqqımızda</a>
-    <a href="elaqe.html">Əlaqə</a>
-    <a href="admin.html">Admin</a>
+<nav class="navbar">
+    <div class="container">
+        <div class="logo">
+            <h1><i class="fas fa-store"></i> Mağazam</h1>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i> Ana</a></li>
+            <li><a href="mehsullar.html"><i class="fas fa-box"></i> Məhsullar</a></li>
+            <li><a href="haqqimda.html" class="active"><i class="fas fa-info-circle"></i> Haqqımızda</a></li>
+            <li><a href="elaqe.html"><i class="fas fa-envelope"></i> Əlaqə</a></li>
+            <li><a href="admin.html"><i class="fas fa-user-shield"></i> Admin</a></li>
+        </ul>
+        <div class="cart-icon-container">
+            <button id="cartBtn" class="cart-btn">
+                <i class="fas fa-shopping-cart"></i>
+                <span id="cartCount" class="cart-count">0</span>
+            </button>
+        </div>
+        <div class="menu-toggle" id="mobile-menu">
+            <i class="fas fa-bars"></i>
+        </div>
+    </div>
 </nav>
 
-<main>
-    <h2>Haqqımızda</h2>
-    <p>Biz 2020-ci ildən etibarən keyfiyyətli məhsulları sərfəli qiymətlərlə təqdim edirik.</p>
-    <p>Missiyamız: Müştəri məmnuniyyəti və çevik çatdırılma.</p>
-    <p>Ünvan: Bakı, Nizami küç. 15</p>
-    <p>Telefon: +994 50 123 45 67</p>
+<main class="about-page">
+    <div class="container">
+        <div class="about-header">
+            <h2>Haqqımızda</h2>
+            <p>Biz kimik və nə üçün çalışırıq?</p>
+        </div>
+        <div class="about-content">
+            <div class="about-text">
+                <h3>Mağazam – keyfiyyətin ünvanı</h3>
+                <p>2020-ci ildən etibarən Azərbaycan bazarında keyfiyyətli məhsulları sərfəli qiymətlərlə təqdim edirik. Missiyamız müştərilərimizə ən yaxşı alış-veriş təcrübəsini təqdim etməkdir.</p>
+                <div class="about-stats">
+                    <div class="stat">
+                        <h4>5000+</h4>
+                        <p>Xoşbəxt müştəri</p>
+                    </div>
+                    <div class="stat">
+                        <h4>1000+</h4>
+                        <p>Satılan məhsul</p>
+                    </div>
+                    <div class="stat">
+                        <h4>99%</h4>
+                        <p>Müştəri məmnuniyyəti</p>
+                    </div>
+                </div>
+            </div>
+            <div class="about-image">
+                <img src="https://cdn-icons-png.flaticon.com/512/2933/2933244.png" alt="About us">
+            </div>
+        </div>
+    </div>
 </main>
 
-<footer>
-    <p>&copy; 2026 Mağazam. Bütün hüquqlar qorunur.</p>
+<footer class="footer">
+    <div class="container">
+        <div class="footer-bottom">
+            <p>&copy; 2026 Mağazam. Bütün hüquqlar qorunur.</p>
+        </div>
+    </div>
 </footer>
 
-<script src="data/products.js"></script>
+<!-- Cart Modal -->
+<div id="cartModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3><i class="fas fa-shopping-cart"></i> Səbətim</h3>
+        <div id="cart-items"></div>
+        <div class="cart-total"><strong>Cəmi: <span id="cartTotal">0</span> AZN</strong></div>
+        <button id="clearCartBtn" class="btn-clear"><i class="fas fa-trash"></i> Təmizlə</button>
+        <button id="checkoutBtn" class="btn-checkout"><i class="fas fa-credit-card"></i> Sifariş et</button>
+    </div>
+</div>
+
 <script src="script.js"></script>
 </body>
 </html>
