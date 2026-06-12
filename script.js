@@ -1,9 +1,25 @@
 // ========== MAĞAZA SCRIPTİ – API İLƏ (BÜTÜN CİHAZLARDA EYNİ) ==========
 console.log("✅ Script yükləndi");
 
-// 🔴 BURANı ÖZ API URL-İN İLƏ DƏYİŞ! 🔴
-// Məsələn: https://652f913a123456.mockapi.io/api/v1/products
-const API_URL = 'https://6a2c76683e2b60ab038fc741.mockapi.io/products'
+// 🔴 ÖZ API URL-İN (MockAPI-dən kopyaladığın link)
+const API_URL = 'https://6a2c76683e2b60ab038fc741.mockapi.io/products';
+
+let products = [];
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+// ========== API FUNKSİYALARI ==========
+async function loadProducts() {
+    try {
+        console.log("Məhsullar API-dən yüklənir...");
+        const response = await fetch(API_URL);
+        products = await response.json();
+        console.log("Yükləndi:", products.length, "məhsul");
+        
+        if (products.length === 0) {
+            console.log("Məhsul yoxdur, default məhsullar əlavə edilir...");
+            await addDefaultProducts();
+            await loadProducts();
+            return;
         }
         
         renderProducts();
@@ -297,19 +313,7 @@ function setupSearch() {
     if (!searchInput) return;
     
     searchInput.addEventListener('input', function(e) {
-        const term = e.target.value.toLowerCase();
-        const container = document.getElementById('product-list');
-        if (!container) return;
-        
-        const filtered = products.filter(p => p.name.toLowerCase().includes(term));
-        container.innerHTML = filtered.map(product => `
-            <div class="product-card">
-                <img src="${product.image}" onerror="this.src='https://via.placeholder.com/200'">
-                <h3>${product.name}</h3>
-                <p class="price">${product.price.toFixed(2)} AZN</p>
-                <button onclick="addToCart(${product.id})">🛒 Səbətə at</button>
-            </div>
-        `).join('');
+        renderProducts(e.target.value);
     });
 }
 
@@ -420,7 +424,6 @@ function setupContactForm() {
     const form = document.getElementById('contactForm');
     if (!form) return;
     
-    // EmailJS-i config-dən başlat
     if (window.CONFIG && window.CONFIG.EMAILJS_PUBLIC_KEY && window.CONFIG.EMAILJS_PUBLIC_KEY !== "YOUR_PUBLIC_KEY_HERE") {
         if (typeof emailjs !== 'undefined') {
             emailjs.init(window.CONFIG.EMAILJS_PUBLIC_KEY);
@@ -433,7 +436,6 @@ function setupContactForm() {
         status.textContent = 'Göndərilir...';
         status.style.color = 'orange';
         
-        // EmailJS aktivdirsə göndər
         if (window.CONFIG && window.CONFIG.EMAILJS_SERVICE_ID && window.CONFIG.EMAILJS_SERVICE_ID !== "YOUR_SERVICE_ID_HERE" && typeof emailjs !== 'undefined') {
             const templateParams = {
                 from_name: document.getElementById('userName')?.value,
@@ -453,7 +455,6 @@ function setupContactForm() {
                     form.reset();
                 });
         } else {
-            // EmailJS yoxdursa sadəcə xəbərdarlıq
             setTimeout(() => {
                 status.innerHTML = '✅ Mesajınız qəbul edildi! Tezliklə cavab verəcəyik.';
                 status.style.color = 'green';
