@@ -20,26 +20,25 @@
             <input type="password" id="adminPassword" placeholder="Şifrə" style="width: 100%; padding: 10px; margin: 10px 0;">
             <button id="loginBtn" style="width: 100%; padding: 10px; background: #27ae60; color: white; border: none; border-radius: 5px;">Daxil ol</button>
             <p id="loginError" style="color: red; margin-top: 10px;"></p>
-            <div id="countdownDisplay" style="margin-top: 10px; font-weight: bold; color: #e67e22;"></div>
         </div>
     </div>
 
     <div id="adminPanel" style="display:none;">
-        <h2>Məhsul əlavə et</h2>
-        <input type="text" id="newName" placeholder="Məhsul adı">
-        <input type="number" id="newPrice" placeholder="Qiymət (AZN)">
-        <input type="text" id="newImage" placeholder="Şəkil linki (images/product.jpg)">
-        <button id="addProductBtn">Əlavə et</button>
+        <h2>➕ Yeni məhsul əlavə et</h2>
+        <div style="background: #f9f9f9; padding: 20px; border-radius: 10px;">
+            <input type="text" id="newName" placeholder="Məhsul adı" style="width: 100%; padding: 10px; margin: 5px 0;">
+            <input type="number" id="newPrice" placeholder="Qiymət (AZN)" style="width: 100%; padding: 10px; margin: 5px 0;">
+            <input type="text" id="newImage" placeholder="Şəkil linki (images/product.jpg)" style="width: 100%; padding: 10px; margin: 5px 0;">
+            <button id="addProductBtn" style="width: 100%; padding: 10px; background: #27ae60; color: white; border: none; border-radius: 5px; margin-top: 10px;">✅ Məhsulu əlavə et</button>
+        </div>
 
-        <h3>Mövcud məhsullar</h3>
+        <h3 style="margin-top: 30px;">📦 Mövcud məhsullar</h3>
         <div id="adminProductList"></div>
         
-        <button id="logoutBtn" style="background: red; color: white; margin-top: 20px;">Çıxış</button>
+        <button id="logoutBtn" style="background: red; color: white; padding: 10px; border: none; border-radius: 5px; margin-top: 20px;">🚪 Çıxış</button>
     </div>
 </main>
 
-<script src="config.js"></script>
-<script src="data/products.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
