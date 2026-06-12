@@ -1,7 +1,7 @@
-// ========== MAĞAZA SCRIPTİ – FULL VERSİYA ==========
+// ========== MAĞAZA SCRIPTİ – FULL VERSİYA (BÜTÜN XÜSUSİYYƏTLƏR) ==========
 console.log("✅ Script yükləndi");
 
-// API Konfiqurasiyası
+// ========== API KONFİQURASİYASI ==========
 const API_URL = 'https://6a2c76683e2b60ab038fc741.mockapi.io/products';
 
 let products = [];
@@ -9,11 +9,14 @@ let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let currentCategory = 'all';
 let currentSort = 'default';
 let currentPage = 1;
+let adminCurrentPage = 1;
 const itemsPerPage = 8;
+const adminItemsPerPage = 5;
 
-// Toast bildirişi
+// ========== TOAST BİLDİRİŞİ ==========
 function showToast(message, isError = false) {
     const toast = document.getElementById('toast');
+    if (!toast) return;
     toast.textContent = message;
     toast.classList.add('show');
     if (isError) toast.classList.add('error');
@@ -24,7 +27,7 @@ function showToast(message, isError = false) {
     }, 3000);
 }
 
-// Loading göstər/gizlət
+// ========== LOADING SPINNER ==========
 function showLoading(show) {
     const spinner = document.getElementById('loadingSpinner');
     if (spinner) spinner.style.display = show ? 'flex' : 'none';
@@ -45,17 +48,21 @@ async function loadProducts() {
             return;
         }
         
-        // Məhsullara kateqoriya əlavə et (nümunə üçün)
+        // Məhsullara əlavə məlumatlar əlavə et (əgər yoxdursa)
         products = products.map((p, index) => ({
             ...p,
-            category: index % 3 === 0 ? 'electronics' : (index % 3 === 1 ? 'clothing' : 'accessories'),
-            rating: (Math.random() * 2 + 3).toFixed(1),
-            discount: Math.random() > 0.7 ? Math.floor(Math.random() * 30) + 10 : 0
+            category: p.category || (index % 3 === 0 ? 'electronics' : (index % 3 === 1 ? 'clothing' : 'accessories')),
+            rating: p.rating || (Math.random() * 2 + 3).toFixed(1),
+            discount: p.discount || (Math.random() > 0.7 ? Math.floor(Math.random() * 30) + 10 : 0),
+            stock: p.stock || Math.floor(Math.random() * 50) + 1,
+            description: p.description || "Keyfiyyətli məhsul, sürətli çatdırılma."
         }));
         
         renderFilteredProducts();
-        renderAdminProducts();
+        renderAdminTable();
+        updateAdminStats();
         updateCartCount();
+        loadOrders();
     } catch (error) {
         console.error('API xətası:', error);
         showToast('Məhsullar yüklənərkən xəta baş verdi!', true);
@@ -66,12 +73,12 @@ async function loadProducts() {
 
 async function addDefaultProducts() {
     const defaults = [
-        { name: "Pambıq köynək", price: 25, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200" },
-        { name: "Cins şalvar", price: 45, image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=200" },
-        { name: "İdman ayaqqabısı", price: 60, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200" },
-        { name: "Ağıllı saat", price: 120, image: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=200" },
-        { name: "Qulaqlıq", price: 35, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200" },
-        { name: "Powerbank", price: 28, image: "https://images.unsplash.com/photo-1609592426548-909a1ae9a8e8?w=200" }
+        { name: "Pambıq köynək", price: 25, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200", category: "clothing", discount: 10, stock: 15 },
+        { name: "Cins şalvar", price: 45, image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=200", category: "clothing", discount: 0, stock: 8 },
+        { name: "İdman ayaqqabısı", price: 60, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200", category: "clothing", discount: 15, stock: 12 },
+        { name: "Ağıllı saat", price: 120, image: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=200", category: "electronics", discount: 5, stock: 20 },
+        { name: "Qulaqlıq", price: 35, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200", category: "electronics", discount: 0, stock: 25 },
+        { name: "Powerbank", price: 28, image: "https://images.unsplash.com/photo-1609592426548-909a1ae9a8e8?w=200", category: "electronics", discount: 20, stock: 30 }
     ];
     
     for (const product of defaults) {
@@ -84,24 +91,28 @@ async function addDefaultProducts() {
     console.log("Default məhsullar əlavə edildi");
 }
 
-async function addProductToAPI(name, price, image) {
+async function addProductToAPI(name, price, image, category, discount, stock, description) {
     const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
             name: name, 
             price: parseFloat(price), 
-            image: image || 'https://via.placeholder.com/200' 
+            image: image || 'https://via.placeholder.com/200',
+            category: category || 'electronics',
+            discount: parseInt(discount) || 0,
+            stock: parseInt(stock) || 10,
+            description: description || ''
         })
     });
     return response.json();
 }
 
-async function updateProductInAPI(id, name, price, image) {
+async function updateProductInAPI(id, name, price, image, category, discount, stock, description) {
     await fetch(`${API_URL}/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, price, image })
+        body: JSON.stringify({ name, price, image, category, discount, stock, description })
     });
 }
 
@@ -109,7 +120,7 @@ async function deleteProductFromAPI(id) {
     await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
 }
 
-// ========== FILTRASIYA VƏ SIRALAMA ==========
+// ========== FİLTRASİYA VƏ SIRALAMA ==========
 function filterProducts() {
     let filtered = [...products];
     
@@ -217,14 +228,16 @@ function renderFeaturedProducts(productsToRender) {
     const container = document.getElementById('featured-products');
     if (!container) return;
     
-    const html = productsToRender.map(product => `
+    const html = productsToRender.map(product => {
+        const discountedPrice = product.discount > 0 ? product.price * (1 - product.discount / 100) : product.price;
+        return `
         <div class="product-card">
             <img src="${product.image}" onerror="this.src='https://via.placeholder.com/200'">
             <h3>${product.name}</h3>
-            <p class="price">${product.price.toFixed(2)} AZN</p>
+            <p class="price">${discountedPrice.toFixed(2)} AZN</p>
             <button onclick="addToCart(${product.id})">Al</button>
         </div>
-    `).join('');
+    `}).join('');
     
     container.innerHTML = html;
 }
@@ -324,7 +337,6 @@ function addToCart(productId) {
     renderCartModal();
     showToast(`${product.name} səbətə əlavə edildi! 🛒`);
     
-    // Səbətə əlavə animasiyası
     const btn = event?.target?.closest('button');
     if (btn) {
         btn.style.transform = 'scale(1.1)';
@@ -346,113 +358,28 @@ function checkout() {
         showToast("Səbətiniz boşdur!", true);
         return;
     }
+    
+    // Sifarişi yadda saxla
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    const newOrder = {
+        id: Date.now(),
+        items: [...cart],
+        total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+        date: new Date().toISOString(),
+        status: 'pending',
+        customerName: localStorage.getItem('customerName') || 'Qonaq'
+    };
+    orders.unshift(newOrder);
+    localStorage.setItem('orders', JSON.stringify(orders));
+    
     showToast("🎉 Sifarişiniz qəbul edildi! Təşəkkür edirik!");
     cart = [];
     saveCart();
     renderCartModal();
+    loadOrders();
 }
 
-// ========== ADMIN PANEL FUNKSİYALARI ==========
-function renderAdminProducts() {
-    const container = document.getElementById('adminProductList');
-    if (!container) return;
-    
-    if (products.length === 0) {
-        container.innerHTML = '<p>Heç bir məhsul yoxdur</p>';
-        return;
-    }
-    
-    container.innerHTML = products.map(p => `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #ddd;">
-            <div>
-                <strong>${p.name}</strong> - ${p.price.toFixed(2)} AZN
-                <br><small style="font-size: 11px; color: #888;">${p.image?.substring(0, 40) || 'şəkil yoxdur'}...</small>
-            </div>
-            <div>
-                <button onclick="editProduct(${p.id})" style="background: #3498db; color: white; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer; margin-right: 5px;"><i class="fas fa-edit"></i> Redaktə</button>
-                <button onclick="deleteProduct(${p.id})" style="background: #e74c3c; color: white; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer;"><i class="fas fa-trash"></i> Sil</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-async function addProduct(name, price, image) {
-    if (!name || !price) {
-        showToast("Məhsul adı və qiymət daxil edin!", true);
-        return false;
-    }
-    
-    showLoading(true);
-    try {
-        await addProductToAPI(name, price, image);
-        await loadProducts();
-        document.getElementById('newName').value = '';
-        document.getElementById('newPrice').value = '';
-        if (document.getElementById('newImage')) document.getElementById('newImage').value = '';
-        showToast(`✅ "${name}" məhsulu əlavə edildi!`);
-        return true;
-    } catch (error) {
-        showToast('Xəta: Məhsul əlavə edilərkən problem oldu!', true);
-        return false;
-    } finally {
-        showLoading(false);
-    }
-}
-
-async function editProduct(id) {
-    const product = products.find(p => p.id == id);
-    if (!product) return;
-    
-    const newName = prompt('Yeni ad:', product.name);
-    const newPrice = prompt('Yeni qiymət (AZN):', product.price);
-    const newImage = prompt('Şəkil linki:', product.image);
-    
-    if (newName && newPrice) {
-        showLoading(true);
-        try {
-            await updateProductInAPI(id, newName, parseFloat(newPrice), newImage || product.image);
-            await loadProducts();
-            showToast("✅ Məhsul yeniləndi!");
-        } catch (error) {
-            showToast('Xəta: Məhsul yenilənərkən problem oldu!', true);
-        } finally {
-            showLoading(false);
-        }
-    }
-}
-
-async function deleteProduct(id) {
-    const product = products.find(p => p.id == id);
-    if (!product) return;
-    
-    if (confirm(`"${product.name}" silinsin?`)) {
-        showLoading(true);
-        try {
-            await deleteProductFromAPI(id);
-            cart = cart.filter(item => item.id != id);
-            saveCart();
-            await loadProducts();
-            showToast("✅ Məhsul silindi!");
-        } catch (error) {
-            showToast('Xəta: Məhsul silinərkən problem oldu!', true);
-        } finally {
-            showLoading(false);
-        }
-    }
-}
-
-// ========== AXTARIŞ ==========
-function setupSearch() {
-    const searchInput = document.getElementById('searchInput');
-    if (!searchInput) return;
-    
-    searchInput.addEventListener('input', function(e) {
-        currentPage = 1;
-        renderFilteredProducts(e.target.value);
-    });
-}
-
-// ========== FILTER EVENTLƏRİ ==========
+// ========== MƏHSULLAR SƏHİFƏSİ FİLTRƏLƏR ==========
 function setupFilters() {
     const filterChips = document.querySelectorAll('.filter-chip');
     filterChips.forEach(chip => {
@@ -475,61 +402,15 @@ function setupFilters() {
     }
 }
 
-// ========== ADMIN LOGIN ==========
-function setupAdmin() {
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const loginSection = document.getElementById('loginSection');
-    const adminPanel = document.getElementById('adminPanel');
+// ========== AXTARIŞ ==========
+function setupSearch() {
+    const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
     
-    if (!loginBtn) return;
-    
-    if (localStorage.getItem('adminLoggedIn') === 'true') {
-        if (loginSection) loginSection.style.display = 'none';
-        if (adminPanel) adminPanel.style.display = 'block';
-        renderAdminProducts();
-    }
-    
-    loginBtn.onclick = () => {
-        const username = document.getElementById('adminUsername')?.value;
-        const password = document.getElementById('adminPassword')?.value;
-        const errorEl = document.getElementById('loginError');
-        
-        if (username === 'admin' && password === 'admin123') {
-            localStorage.setItem('adminLoggedIn', 'true');
-            if (loginSection) loginSection.style.display = 'none';
-            if (adminPanel) adminPanel.style.display = 'block';
-            if (errorEl) errorEl.textContent = '';
-            renderAdminProducts();
-            showToast("Admin panelə daxil oldunuz!");
-        } else {
-            if (errorEl) errorEl.textContent = '❌ İstifadəçi adı və ya parol yanlış!';
-            showToast("İstifadəçi adı və ya parol yanlış!", true);
-        }
-    };
-    
-    if (logoutBtn) {
-        logoutBtn.onclick = () => {
-            localStorage.removeItem('adminLoggedIn');
-            if (loginSection) loginSection.style.display = 'block';
-            if (adminPanel) adminPanel.style.display = 'none';
-            showToast("Admin panelindən çıxdınız!");
-        };
-    }
-    
-    const addBtn = document.getElementById('addProductBtn');
-    if (addBtn) {
-        addBtn.onclick = () => {
-            const name = document.getElementById('newName')?.value;
-            const price = document.getElementById('newPrice')?.value;
-            const image = document.getElementById('newImage')?.value;
-            if (name && price) {
-                addProduct(name, price, image);
-            } else {
-                showToast("Məhsul adı və qiymət daxil edin!", true);
-            }
-        };
-    }
+    searchInput.addEventListener('input', function(e) {
+        currentPage = 1;
+        renderFilteredProducts(e.target.value);
+    });
 }
 
 // ========== DARK MODE ==========
@@ -608,6 +489,393 @@ function setupContactForm() {
         showToast("✅ Mesajınız qəbul edildi! Tezliklə cavab verəcəyik.");
         form.reset();
     });
+}
+
+// ========== ADMIN PANEL FUNKSİYALARI ==========
+function updateAdminStats() {
+    const totalProducts = products.length;
+    const totalValue = products.reduce((sum, p) => sum + p.price, 0);
+    const avgPrice = totalProducts > 0 ? (totalValue / totalProducts).toFixed(2) : 0;
+    const discountedCount = products.filter(p => p.discount > 0).length;
+    
+    const totalProductsEl = document.getElementById('totalProducts');
+    const statTotalProductsEl = document.getElementById('statTotalProducts');
+    const statAvgPriceEl = document.getElementById('statAvgPrice');
+    const statTotalValueEl = document.getElementById('statTotalValue');
+    const statDiscountedEl = document.getElementById('statDiscounted');
+    
+    if (totalProductsEl) totalProductsEl.textContent = totalProducts;
+    if (statTotalProductsEl) statTotalProductsEl.textContent = totalProducts;
+    if (statAvgPriceEl) statAvgPriceEl.textContent = avgPrice + ' AZN';
+    if (statTotalValueEl) statTotalValueEl.textContent = totalValue.toFixed(2) + ' AZN';
+    if (statDiscountedEl) statDiscountedEl.textContent = discountedCount;
+}
+
+function getCategoryName(cat) {
+    const categories = {
+        'electronics': 'Elektronika',
+        'clothing': 'Geyim',
+        'accessories': 'Aksessuarlar'
+    };
+    return categories[cat] || 'Digər';
+}
+
+function renderAdminTable() {
+    const container = document.getElementById('adminProductList');
+    if (!container) return;
+    
+    const searchTerm = document.getElementById('adminSearch')?.value.toLowerCase() || '';
+    let filtered = products.filter(p => p.name.toLowerCase().includes(searchTerm));
+    
+    const totalPages = Math.ceil(filtered.length / adminItemsPerPage);
+    const start = (adminCurrentPage - 1) * adminItemsPerPage;
+    const paginated = filtered.slice(start, start + adminItemsPerPage);
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<tr><td colspan="6" style="text-align:center;">Heç bir məhsul yoxdur</td></tr>';
+        return;
+    }
+    
+    container.innerHTML = paginated.map(p => `
+        <tr>
+            <td>${p.id}</td>
+            <td><img src="${p.image}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/50'"></td>
+            <td><strong>${p.name}</strong>${p.discount > 0 ? `<br><span class="badge-discount">-${p.discount}%</span>` : ''}</td>
+            <td>${p.price.toFixed(2)} AZN</td>
+            <td><span class="badge-category">${getCategoryName(p.category)}</span></td>
+            <td>
+                <button class="btn-icon btn-edit" onclick="editProduct(${p.id})" title="Redaktə et"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon btn-delete" onclick="deleteProduct(${p.id})" title="Sil"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+    
+    const paginationDiv = document.getElementById('adminPagination');
+    if (paginationDiv && totalPages > 1) {
+        let paginationHtml = '';
+        for (let i = 1; i <= totalPages; i++) {
+            paginationHtml += `<button class="page-btn ${i === adminCurrentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+        }
+        paginationDiv.innerHTML = paginationHtml;
+        document.querySelectorAll('#adminPagination .page-btn').forEach(btn => {
+            btn.onclick = () => {
+                adminCurrentPage = parseInt(btn.dataset.page);
+                renderAdminTable();
+            };
+        });
+    } else if (paginationDiv) {
+        paginationDiv.innerHTML = '';
+    }
+}
+
+function setupAdminSearch() {
+    const searchInput = document.getElementById('adminSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            adminCurrentPage = 1;
+            renderAdminTable();
+        });
+    }
+}
+
+function setupAdminTabs() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabBtns.forEach(btn => {
+        btn.onclick = () => {
+            const tabId = btn.dataset.tab;
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            const activeTab = document.getElementById(`${tabId}Tab`);
+            if (activeTab) activeTab.classList.add('active');
+        };
+    });
+}
+
+function loadOrders() {
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    const container = document.getElementById('ordersList');
+    if (!container) return;
+    
+    if (orders.length === 0) {
+        container.innerHTML = '<tr><td colspan="6" style="text-align:center;">Hələ sifariş yoxdur</td></tr>';
+        return;
+    }
+    
+    container.innerHTML = orders.slice(0, 10).map(order => `
+        <tr>
+            <td>#${order.id}</td>
+            <td>${order.customerName || 'Qonaq'}</td>
+            <td>${new Date(order.date).toLocaleDateString('az')}</td>
+            <td>${order.total.toFixed(2)} AZN</td>
+            <td><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></td>
+            <td><button class="btn-icon" onclick="viewOrder(${order.id})"><i class="fas fa-eye"></i></button></td>
+        </tr>
+    `).join('');
+}
+
+function getStatusText(status) {
+    const statuses = {
+        'pending': 'Gözləmədə',
+        'completed': 'Tamamlandı',
+        'cancelled': 'Ləğv edildi'
+    };
+    return statuses[status] || status;
+}
+
+function viewOrder(orderId) {
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    const order = orders.find(o => o.id == orderId);
+    if (order) {
+        let itemsHtml = order.items.map(item => `${item.name} x ${item.quantity} = ${(item.price * item.quantity).toFixed(2)} AZN`).join('\n');
+        alert(`Sifariş #${orderId}\nMüştəri: ${order.customerName || 'Qonaq'}\nTarix: ${new Date(order.date).toLocaleString('az')}\nMəhsullar:\n${itemsHtml}\nÜmumi: ${order.total.toFixed(2)} AZN\nStatus: ${getStatusText(order.status)}`);
+    }
+}
+
+function initSalesChart() {
+    const canvas = document.getElementById('salesChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+    
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    const last6Months = [];
+    const salesData = [];
+    
+    for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        last6Months.push(date.toLocaleString('az', { month: 'short' }));
+        const monthSales = orders.filter(o => new Date(o.date).getMonth() === date.getMonth()).reduce((sum, o) => sum + o.total, 0);
+        salesData.push(monthSales);
+    }
+    
+    new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: last6Months,
+            datasets: [{
+                label: 'Satış (AZN)',
+                data: salesData,
+                borderColor: '#e67e22',
+                backgroundColor: 'rgba(230, 126, 34, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'top' }
+            }
+        }
+    });
+}
+
+function setupSettingsForm() {
+    const form = document.getElementById('settingsForm');
+    if (!form) return;
+    
+    const savedUsername = localStorage.getItem('adminUsername') || 'admin';
+    const savedEmail = localStorage.getItem('adminEmail') || 'admin@magazam.az';
+    const usernameInput = document.getElementById('settingUsername');
+    const emailInput = document.getElementById('settingEmail');
+    if (usernameInput) usernameInput.value = savedUsername;
+    if (emailInput) emailInput.value = savedEmail;
+    
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newUsername = document.getElementById('settingUsername')?.value;
+        const newPassword = document.getElementById('settingPassword')?.value;
+        const newPasswordConfirm = document.getElementById('settingPasswordConfirm')?.value;
+        const newEmail = document.getElementById('settingEmail')?.value;
+        
+        if (newPassword && newPassword !== newPasswordConfirm) {
+            showToast('Şifrələr uyğun gəlmir!', true);
+            return;
+        }
+        
+        if (newUsername) localStorage.setItem('adminUsername', newUsername);
+        if (newPassword) localStorage.setItem('adminPassword', newPassword);
+        if (newEmail) localStorage.setItem('adminEmail', newEmail);
+        
+        if (window.CONFIG) {
+            if (newUsername) window.CONFIG.ADMIN_USERNAME = newUsername;
+            if (newPassword) window.CONFIG.ADMIN_PASSWORD = newPassword;
+        }
+        
+        const passwordInput = document.getElementById('settingPassword');
+        const confirmInput = document.getElementById('settingPasswordConfirm');
+        if (passwordInput) passwordInput.value = '';
+        if (confirmInput) confirmInput.value = '';
+        
+        showToast('Ayarlar yadda saxlanıldı!');
+    });
+}
+
+// ========== MƏHSUL ƏMƏLİYYATLARI (CRUD) ==========
+async function addProduct(name, price, image, category, discount, stock, description) {
+    if (!name || !price) {
+        showToast("Məhsul adı və qiymət daxil edin!", true);
+        return false;
+    }
+    
+    showLoading(true);
+    try {
+        await addProductToAPI(name, price, image, category, discount, stock, description);
+        await loadProducts();
+        const nameInput = document.getElementById('newName');
+        const priceInput = document.getElementById('newPrice');
+        const imageInput = document.getElementById('newImage');
+        const discountInput = document.getElementById('newDiscount');
+        const stockInput = document.getElementById('newStock');
+        const descInput = document.getElementById('newDescription');
+        
+        if (nameInput) nameInput.value = '';
+        if (priceInput) priceInput.value = '';
+        if (imageInput) imageInput.value = '';
+        if (discountInput) discountInput.value = '0';
+        if (stockInput) stockInput.value = '10';
+        if (descInput) descInput.value = '';
+        
+        showToast(`✅ "${name}" məhsulu əlavə edildi!`);
+        renderAdminTable();
+        updateAdminStats();
+        return true;
+    } catch (error) {
+        showToast('Xəta: Məhsul əlavə edilərkən problem oldu!', true);
+        return false;
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function editProduct(id) {
+    const product = products.find(p => p.id == id);
+    if (!product) return;
+    
+    const newName = prompt('Yeni ad:', product.name);
+    const newPrice = prompt('Yeni qiymət (AZN):', product.price);
+    const newImage = prompt('Şəkil linki:', product.image);
+    const newCategory = prompt('Kateqoriya (electronics/clothing/accessories):', product.category || 'electronics');
+    const newDiscount = prompt('Endirim faizi (%):', product.discount || 0);
+    const newStock = prompt('Stok sayı:', product.stock || 10);
+    
+    if (newName && newPrice) {
+        showLoading(true);
+        try {
+            await updateProductInAPI(id, newName, parseFloat(newPrice), newImage || product.image, newCategory, parseInt(newDiscount) || 0, parseInt(newStock) || 10, product.description);
+            await loadProducts();
+            showToast("✅ Məhsul yeniləndi!");
+            renderAdminTable();
+            updateAdminStats();
+        } catch (error) {
+            showToast('Xəta: Məhsul yenilənərkən problem oldu!', true);
+        } finally {
+            showLoading(false);
+        }
+    }
+}
+
+async function deleteProduct(id) {
+    const product = products.find(p => p.id == id);
+    if (!product) return;
+    
+    if (confirm(`"${product.name}" silinsin?`)) {
+        showLoading(true);
+        try {
+            await deleteProductFromAPI(id);
+            cart = cart.filter(item => item.id != id);
+            saveCart();
+            await loadProducts();
+            showToast("✅ Məhsul silindi!");
+            renderAdminTable();
+            updateAdminStats();
+        } catch (error) {
+            showToast('Xəta: Məhsul silinərkən problem oldu!', true);
+        } finally {
+            showLoading(false);
+        }
+    }
+}
+
+// ========== ADMIN LOGIN ==========
+function setupAdmin() {
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const loginSection = document.getElementById('loginSection');
+    const adminPanel = document.getElementById('adminPanel');
+    
+    if (!loginBtn) return;
+    
+    const savedUsername = localStorage.getItem('adminUsername') || (window.CONFIG?.ADMIN_USERNAME || 'admin');
+    const savedPassword = localStorage.getItem('adminPassword') || (window.CONFIG?.ADMIN_PASSWORD || 'admin123');
+    
+    if (localStorage.getItem('adminLoggedIn') === 'true') {
+        if (loginSection) loginSection.style.display = 'none';
+        if (adminPanel) adminPanel.style.display = 'block';
+        renderAdminTable();
+        updateAdminStats();
+        loadOrders();
+        initSalesChart();
+        setupAdminTabs();
+        setupAdminSearch();
+        setupSettingsForm();
+    }
+    
+    loginBtn.onclick = () => {
+        const username = document.getElementById('adminUsername')?.value;
+        const password = document.getElementById('adminPassword')?.value;
+        const errorEl = document.getElementById('loginError');
+        
+        if (username === savedUsername && password === savedPassword) {
+            localStorage.setItem('adminLoggedIn', 'true');
+            if (loginSection) loginSection.style.display = 'none';
+            if (adminPanel) adminPanel.style.display = 'block';
+            if (errorEl) errorEl.textContent = '';
+            renderAdminTable();
+            updateAdminStats();
+            loadOrders();
+            initSalesChart();
+            setupAdminTabs();
+            setupAdminSearch();
+            setupSettingsForm();
+            showToast("Admin panelə daxil oldunuz!");
+        } else {
+            if (errorEl) errorEl.textContent = '❌ İstifadəçi adı və ya parol yanlış!';
+            showToast("İstifadəçi adı və ya parol yanlış!", true);
+        }
+    };
+    
+    if (logoutBtn) {
+        logoutBtn.onclick = () => {
+            localStorage.removeItem('adminLoggedIn');
+            if (loginSection) loginSection.style.display = 'block';
+            if (adminPanel) adminPanel.style.display = 'none';
+            showToast("Admin panelindən çıxdınız!");
+        };
+    }
+    
+    const addForm = document.getElementById('addProductForm');
+    if (addForm) {
+        addForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('newName')?.value;
+            const price = document.getElementById('newPrice')?.value;
+            const image = document.getElementById('newImage')?.value;
+            const category = document.getElementById('newCategory')?.value;
+            const discount = document.getElementById('newDiscount')?.value;
+            const stock = document.getElementById('newStock')?.value;
+            const description = document.getElementById('newDescription')?.value;
+            
+            if (name && price) {
+                await addProduct(name, price, image, category, discount, stock, description);
+            } else {
+                showToast("Məhsul adı və qiymət daxil edin!", true);
+            }
+        };
+    }
 }
 
 // ========== SƏHİFƏ YÜKLƏNMƏ ==========
