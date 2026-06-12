@@ -1,19 +1,17 @@
-// ========== MAĞAZA SCRIPTİ – TAM İŞLƏK VERSİYA ==========
+// ========== MAĞAZA SCRIPTİ – PROFESSIONAL VERSİYA ==========
 console.log("✅ Script yükləndi");
 
 // Default məhsullar
 const DEFAULT_PRODUCTS = [
-    { id: 1, name: "Pambıq köynək", price: 25, image: "https://via.placeholder.com/200" },
-    { id: 2, name: "Cins şalvar", price: 45, image: "https://via.placeholder.com/200" },
-    { id: 3, name: "İdman ayaqqabısı", price: 60, image: "https://via.placeholder.com/200" }
+    { id: 1, name: "Pambıq köynək", price: 25, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200" },
+    { id: 2, name: "Cins şalvar", price: 45, image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=200" },
+    { id: 3, name: "İdman ayaqqabısı", price: 60, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200" }
 ];
 
-// Məhsulları yüklə
 let products = [];
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
-let isAdminLoggedIn = false;
 
-// Məhsulları localStorage-dan yüklə
+// Məhsulları yüklə
 function loadProducts() {
     const stored = localStorage.getItem('products');
     if (stored) {
@@ -28,25 +26,96 @@ function loadProducts() {
 // Məhsulları yadda saxla
 function saveProducts() {
     localStorage.setItem('products', JSON.stringify(products));
-    console.log("Məhsullar saxlanıldı");
 }
 
 // Səbəti yadda saxla
 function saveCart() {
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartCount();
+    updateCartTotal();
 }
 
 // Səbət sayını yenilə
 function updateCartCount() {
     const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-    const cartCountElements = document.querySelectorAll('#cartCount');
-    cartCountElements.forEach(el => {
+    document.querySelectorAll('#cartCount').forEach(el => {
         if (el) el.textContent = count;
     });
 }
 
-// Məhsulları göstər (ana səhifə və mehsullar səhifəsi üçün)
+// Səbət cəmini yenilə
+function updateCartTotal() {
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const totalEl = document.getElementById('cartTotal');
+    if (totalEl) totalEl.textContent = total.toFixed(2);
+}
+
+// Səbət modalını render et
+function renderCartModal() {
+    const container = document.getElementById('cart-items');
+    if (!container) return;
+    
+    if (cart.length === 0) {
+        container.innerHTML = '<p style="text-align:center;">Səbətiniz boşdur 😢</p>';
+        updateCartTotal();
+        return;
+    }
+    
+    container.innerHTML = '';
+    cart.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+            <div>
+                <strong>${item.name}</strong><br>
+                <small>${item.price} AZN</small>
+            </div>
+            <div>
+                <button class="cart-qty-down" data-index="${index}">-</button>
+                <span style="margin:0 10px;">${item.quantity}</span>
+                <button class="cart-qty-up" data-index="${index}">+</button>
+                <button class="cart-remove" data-index="${index}" style="background:#e74c3c; color:white; margin-left:10px;">🗑️</button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+    
+    updateCartTotal();
+    
+    // Event listeners
+    document.querySelectorAll('.cart-qty-down').forEach(btn => {
+        btn.onclick = () => {
+            const idx = parseInt(btn.dataset.index);
+            if (cart[idx].quantity > 1) cart[idx].quantity--;
+            else cart.splice(idx, 1);
+            saveCart();
+            renderCartModal();
+            renderProducts();
+        };
+    });
+    
+    document.querySelectorAll('.cart-qty-up').forEach(btn => {
+        btn.onclick = () => {
+            const idx = parseInt(btn.dataset.index);
+            cart[idx].quantity++;
+            saveCart();
+            renderCartModal();
+            renderProducts();
+        };
+    });
+    
+    document.querySelectorAll('.cart-remove').forEach(btn => {
+        btn.onclick = () => {
+            const idx = parseInt(btn.dataset.index);
+            cart.splice(idx, 1);
+            saveCart();
+            renderCartModal();
+            renderProducts();
+        };
+    });
+}
+
+// Məhsulları göstər
 function renderProducts() {
     const container = document.getElementById('product-list');
     const featuredContainer = document.getElementById('featured-products');
@@ -55,42 +124,46 @@ function renderProducts() {
     
     const html = products.map(product => `
         <div class="product-card">
-            <img src="${product.image || 'https://via.placeholder.com/200'}" alt="${product.name}">
+            <img src="${product.image}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/200'">
             <h3>${product.name}</h3>
-            <p class="price">${product.price} AZN</p>
-            <button onclick="addToCart(${product.id})">🛒 Səbətə at</button>
+            <p class="price">${product.price.toFixed(2)} AZN</p>
+            <button onclick="addToCart(${product.id})"><i class="fas fa-cart-plus"></i> Səbətə at</button>
         </div>
     `).join('');
     
     if (container) container.innerHTML = html;
-    if (featuredContainer) featuredContainer.innerHTML = products.slice(0, 3).map(product => `
+    if (featuredContainer) featuredContainer.innerHTML = products.slice(0, 4).map(product => `
         <div class="product-card">
-            <img src="${product.image || 'https://via.placeholder.com/200'}">
+            <img src="${product.image}" onerror="this.src='https://via.placeholder.com/200'">
             <h3>${product.name}</h3>
-            <p class="price">${product.price} AZN</p>
+            <p class="price">${product.price.toFixed(2)} AZN</p>
             <button onclick="addToCart(${product.id})">Al</button>
         </div>
     `).join('');
     
-    // Admin panelindəki siyahını da yenilə
     renderAdminProducts();
 }
 
-// Admin panelində məhsul siyahısını göstər
+// Admin məhsul siyahısı
 function renderAdminProducts() {
     const container = document.getElementById('adminProductList');
     if (!container) return;
     
     if (products.length === 0) {
-        container.innerHTML = '<p>Hələ məhsul yoxdur</p>';
+        container.innerHTML = '<p>Heç bir məhsul yoxdur</p>';
         return;
     }
     
     container.innerHTML = products.map(p => `
-        <div style="border:1px solid #ddd; padding:10px; margin:10px 0; border-radius:5px;">
-            <strong>${p.name}</strong> - ${p.price} AZN
-            <button onclick="editProduct(${p.id})" style="margin-left:10px;">✏️ Redaktə et</button>
-            <button onclick="deleteProduct(${p.id})" style="background:red; color:white; margin-left:5px;">❌ Sil</button>
+        <div class="admin-product-item">
+            <div>
+                <strong>${p.name}</strong> - ${p.price.toFixed(2)} AZN
+                <br><small>${p.image}</small>
+            </div>
+            <div>
+                <button onclick="editProduct(${p.id})" class="btn-edit"><i class="fas fa-edit"></i> Redaktə</button>
+                <button onclick="deleteProduct(${p.id})" class="btn-delete"><i class="fas fa-trash"></i> Sil</button>
+            </div>
         </div>
     `).join('');
 }
@@ -103,18 +176,16 @@ function addProduct(name, price, image) {
     }
     
     const newId = Math.max(...products.map(p => p.id), 0) + 1;
-    const newProduct = {
+    products.push({
         id: newId,
         name: name,
         price: parseFloat(price),
         image: image || 'https://via.placeholder.com/200'
-    };
+    });
     
-    products.push(newProduct);
     saveProducts();
     renderProducts();
-    console.log("Məhsul əlavə edildi:", newProduct);
-    alert(`"${name}" məhsulu əlavə edildi!`);
+    alert(`✅ "${name}" məhsulu əlavə edildi!`);
     return true;
 }
 
@@ -125,15 +196,15 @@ function editProduct(id) {
     
     const newName = prompt('Yeni ad:', product.name);
     const newPrice = prompt('Yeni qiymət (AZN):', product.price);
-    const newImage = prompt('Şəkil linki (boş buraxa bilərsən):', product.image);
+    const newImage = prompt('Şəkil linki:', product.image);
     
     if (newName) product.name = newName;
     if (newPrice) product.price = parseFloat(newPrice);
-    if (newImage && newImage.trim()) product.image = newImage;
+    if (newImage) product.image = newImage;
     
     saveProducts();
     renderProducts();
-    alert("Məhsul yeniləndi!");
+    alert("✅ Məhsul yeniləndi!");
 }
 
 // Məhsul sil
@@ -141,23 +212,22 @@ function deleteProduct(id) {
     const product = products.find(p => p.id === id);
     if (!product) return;
     
-    if (confirm(`"${product.name}" məhsulunu silmək istədiyinizdən əminsiniz?`)) {
+    if (confirm(`"${product.name}" silinsin?`)) {
         products = products.filter(p => p.id !== id);
-        saveProducts();
-        renderProducts();
-        // Səbətdən də sil
         cart = cart.filter(item => item.id !== id);
+        saveProducts();
         saveCart();
-        alert("Məhsul silindi!");
+        renderProducts();
+        alert("✅ Məhsul silindi!");
     }
 }
 
 // Səbətə əlavə et
 function addToCart(productId) {
-    const product = products.find(p => p.id == productId);
+    const product = products.find(p => p.id === productId);
     if (!product) return;
     
-    const existing = cart.find(item => item.id == productId);
+    const existing = cart.find(item => item.id === productId);
     if (existing) {
         existing.quantity++;
     } else {
@@ -165,10 +235,55 @@ function addToCart(productId) {
     }
     
     saveCart();
-    alert(`${product.name} səbətə əlavə edildi!`);
+    renderCartModal();
+    alert(`🛒 ${product.name} səbətə əlavə edildi!`);
 }
 
-// Admin login (sadə versiya)
+// Səbəti təmizlə
+function clearCart() {
+    if (confirm("Səbəti təmizləmək istədiyinizdən əminsiniz?")) {
+        cart = [];
+        saveCart();
+        renderCartModal();
+        alert("Səbət təmizləndi!");
+    }
+}
+
+// Sifarişi tamamla
+function checkout() {
+    if (cart.length === 0) {
+        alert("Səbətiniz boşdur!");
+        return;
+    }
+    alert("🎉 Sifarişiniz qəbul edildi! Təşəkkür edirik!");
+    cart = [];
+    saveCart();
+    renderCartModal();
+}
+
+// Axtarış
+function setupSearch() {
+    const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
+    
+    searchInput.addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        const container = document.getElementById('product-list');
+        if (!container) return;
+        
+        const filtered = products.filter(p => p.name.toLowerCase().includes(term));
+        container.innerHTML = filtered.map(product => `
+            <div class="product-card">
+                <img src="${product.image}" onerror="this.src='https://via.placeholder.com/200'">
+                <h3>${product.name}</h3>
+                <p class="price">${product.price.toFixed(2)} AZN</p>
+                <button onclick="addToCart(${product.id})">🛒 Səbətə at</button>
+            </div>
+        `).join('');
+    });
+}
+
+// Admin login
 function setupAdmin() {
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
@@ -177,21 +292,19 @@ function setupAdmin() {
     
     if (!loginBtn) return;
     
-    // Əvvəlki login statusunu yoxla
+    // Əvvəlki login statusu
     if (localStorage.getItem('adminLoggedIn') === 'true') {
         if (loginSection) loginSection.style.display = 'none';
         if (adminPanel) adminPanel.style.display = 'block';
-        isAdminLoggedIn = true;
         renderAdminProducts();
     }
     
-    loginBtn.onclick = function() {
+    loginBtn.onclick = () => {
         const username = document.getElementById('adminUsername')?.value;
         const password = document.getElementById('adminPassword')?.value;
         const errorEl = document.getElementById('loginError');
         
         if (username === 'admin' && password === 'admin123') {
-            isAdminLoggedIn = true;
             localStorage.setItem('adminLoggedIn', 'true');
             if (loginSection) loginSection.style.display = 'none';
             if (adminPanel) adminPanel.style.display = 'block';
@@ -203,77 +316,107 @@ function setupAdmin() {
     };
     
     if (logoutBtn) {
-        logoutBtn.onclick = function() {
-            isAdminLoggedIn = false;
+        logoutBtn.onclick = () => {
             localStorage.removeItem('adminLoggedIn');
             if (loginSection) loginSection.style.display = 'block';
             if (adminPanel) adminPanel.style.display = 'none';
-            if (document.getElementById('adminUsername')) document.getElementById('adminUsername').value = '';
-            if (document.getElementById('adminPassword')) document.getElementById('adminPassword').value = '';
         };
     }
     
-    // Məhsul əlavə etmə düyməsi
     const addBtn = document.getElementById('addProductBtn');
     if (addBtn) {
-        addBtn.onclick = function() {
+        addBtn.onclick = () => {
             const name = document.getElementById('newName')?.value;
             const price = document.getElementById('newPrice')?.value;
             const image = document.getElementById('newImage')?.value;
-            
             if (name && price) {
                 addProduct(name, price, image);
                 document.getElementById('newName').value = '';
                 document.getElementById('newPrice').value = '';
                 if (document.getElementById('newImage')) document.getElementById('newImage').value = '';
-            } else {
-                alert("Məhsul adı və qiymət daxil edin!");
             }
         };
     }
 }
 
-// Axtarış funksiyası
-function setupSearch() {
-    const searchInput = document.getElementById('searchInput');
-    if (!searchInput) return;
+// Mobil menyu
+function setupMobileMenu() {
+    const menuToggle = document.getElementById('mobile-menu');
+    const navLinks = document.querySelector('.nav-links');
+    if (menuToggle && navLinks) {
+        menuToggle.onclick = () => {
+            navLinks.classList.toggle('show');
+        };
+    }
+}
+
+// Səbət modal
+function setupCartModal() {
+    const cartBtn = document.getElementById('cartBtn');
+    const modal = document.getElementById('cartModal');
+    const closeBtn = document.querySelector('.close');
+    const clearBtn = document.getElementById('clearCartBtn');
+    const checkoutBtn = document.getElementById('checkoutBtn');
     
-    searchInput.addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const container = document.getElementById('product-list');
-        if (!container) return;
+    if (cartBtn && modal) {
+        cartBtn.onclick = () => {
+            renderCartModal();
+            modal.style.display = 'block';
+        };
+        if (closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
+        window.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+    }
+    
+    if (clearBtn) clearBtn.onclick = clearCart;
+    if (checkoutBtn) checkoutBtn.onclick = checkout;
+}
+
+// Newsletter
+function setupNewsletter() {
+    const newsletterBtn = document.getElementById('newsletterBtn');
+    if (newsletterBtn) {
+        newsletterBtn.onclick = () => {
+            const email = document.getElementById('newsletterEmail')?.value;
+            if (email) {
+                alert(`✅ ${email} ünvanı abunə edildi!`);
+                document.getElementById('newsletterEmail').value = '';
+            } else {
+                alert("Zəhmət olmasa e-poçt daxil edin!");
+            }
+        };
+    }
+}
+
+// EmailJS ilə əlaqə (opsional)
+function setupContactForm() {
+    const form = document.getElementById('contactForm');
+    if (!form) return;
+    
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const status = document.getElementById('formStatus');
+        status.textContent = 'Göndərilir...';
+        status.style.color = 'orange';
         
-        const filtered = products.filter(p => p.name.toLowerCase().includes(searchTerm));
-        container.innerHTML = filtered.map(product => `
-            <div class="product-card">
-                <img src="${product.image || 'https://via.placeholder.com/200'}">
-                <h3>${product.name}</h3>
-                <p class="price">${product.price} AZN</p>
-                <button onclick="addToCart(${product.id})">🛒 Səbətə at</button>
-            </div>
-        `).join('');
+        // EmailJS konfiqurasiya edilməyibsə, sadəcə xəbərdarlıq
+        setTimeout(() => {
+            status.innerHTML = '✅ Mesajınız qəbul edildi! Tezliklə cavab verəcəyik.';
+            status.style.color = 'green';
+            form.reset();
+        }, 1000);
     });
 }
 
-// Səhifə yüklənəndə
-window.onload = function() {
-    console.log("window.onload işlədi");
+// ========== SƏHİFƏ YÜKLƏNƏNDƏ ==========
+window.onload = () => {
+    console.log("Səhifə yükləndi");
     loadProducts();
     renderProducts();
     updateCartCount();
     setupAdmin();
     setupSearch();
-    
-    // Səbət modal əgər varsa
-    const cartBtn = document.getElementById('cartBtn');
-    const modal = document.getElementById('cartModal');
-    const closeBtn = document.querySelector('.close');
-    
-    if (cartBtn && modal) {
-        cartBtn.onclick = () => modal.style.display = 'block';
-        if (closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
-        window.onclick = (e) => { if (e.target == modal) modal.style.display = 'none'; };
-    }
-    
-    console.log("Bütün funksiyalar işə salındı");
+    setupCartModal();
+    setupMobileMenu();
+    setupNewsletter();
+    setupContactForm();
 };
