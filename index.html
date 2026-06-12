@@ -3,40 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ana səhifə | Mağazam</title>
+    <title>Mağazam | Ən keyfiyyətli məhsullar</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 
-<header>
-    <h1>🛍️ Mağazam</h1>
-    <button id="cartBtn" class="cart-icon">🛒 <span id="cartCount">0</span></button>
-</header>
-
-<nav>
-    <a href="index.html">Ana</a>
-    <a href="mehsullar.html">Məhsullar</a>
-    <a href="haqqimda.html">Haqqımızda</a>
-    <a href="elaqe.html">Əlaqə</a>
-    <a href="admin.html">Admin</a>
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="container">
+        <div class="logo">
+            <h1><i class="fas fa-store"></i> Mağazam</h1>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html" class="active"><i class="fas fa-home"></i> Ana</a></li>
+            <li><a href="mehsullar.html"><i class="fas fa-box"></i> Məhsullar</a></li>
+            <li><a href="haqqimda.html"><i class="fas fa-info-circle"></i> Haqqımızda</a></li>
+            <li><a href="elaqe.html"><i class="fas fa-envelope"></i> Əlaqə</a></li>
+            <li><a href="admin.html"><i class="fas fa-user-shield"></i> Admin</a></li>
+        </ul>
+        <div class="cart-icon-container">
+            <button id="cartBtn" class="cart-btn">
+                <i class="fas fa-shopping-cart"></i>
+                <span id="cartCount" class="cart-count">0</span>
+            </button>
+        </div>
+        <div class="menu-toggle" id="mobile-menu">
+            <i class="fas fa-bars"></i>
+        </div>
+    </div>
 </nav>
 
-<main>
-    <section class="hero">
-        <h2>Xoş gəldiniz!</h2>
-        <p>Ən keyfiyyətli məhsullar ən sərfəli qiymətlərlə</p>
-        <a href="mehsullar.html" class="btn">Alış-verişə başla</a>
-    </section>
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <h1>Ən Yaxşı Məhsullar<br><span>Ən Sərfəli Qiymətlərlə</span></h1>
+            <p>Premium keyfiyyət, sürətli çatdırılma və 100% müştəri məmnuniyyəti.</p>
+            <a href="mehsullar.html" class="btn btn-primary"><i class="fas fa-shopping-bag"></i> Alış-verişə başla</a>
+        </div>
+        <div class="hero-image">
+            <img src="https://cdn-icons-png.flaticon.com/512/3159/3159339.png" alt="Shopping">
+        </div>
+    </div>
+</section>
 
-    <section class="featured">
-        <h3>🔥 Ən çox satılanlar</h3>
+<!-- Features -->
+<section class="features">
+    <div class="container">
+        <div class="feature-box">
+            <i class="fas fa-truck-fast"></i>
+            <h3>Sürətli Çatdırılma</h3>
+            <p>Ölkə daxilində 2-3 iş günü</p>
+        </div>
+        <div class="feature-box">
+            <i class="fas fa-credit-card"></i>
+            <h3>Təhlükəsiz Ödəniş</h3>
+            <p>Kart və nağd ödəniş imkanı</p>
+        </div>
+        <div class="feature-box">
+            <i class="fas fa-undo-alt"></i>
+            <h3>30 Gün Geri Qaytarma</h3>
+            <p>Keyfiyyət zəmanəti</p>
+        </div>
+        <div class="feature-box">
+            <i class="fas fa-headset"></i>
+            <h3>7/24 Dəstək</h3>
+            <p>Müştəri xidmətləri</p>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products -->
+<section class="featured-products">
+    <div class="container">
+        <h2 class="section-title">🌟 Ən Çox Satılanlar</h2>
         <div id="featured-products" class="product-grid"></div>
-    </section>
-</main>
+    </div>
+</section>
 
-<footer>
-    <p>&copy; 2026 Mağazam. Bütün hüquqlar qorunur.</p>
+<!-- Newsletter -->
+<section class="newsletter">
+    <div class="container">
+        <h3>Yeniliklərdən xəbərdar olun!</h3>
+        <p>Endirimlər və yeni məhsullar haqqında ilk siz bilin</p>
+        <div class="newsletter-form">
+            <input type="email" placeholder="E-poçt ünvanınız" id="newsletterEmail">
+            <button id="newsletterBtn">Abunə ol</button>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3><i class="fas fa-store"></i> Mağazam</h3>
+                <p>Keyfiyyətli məhsullar, sərfəli qiymətlər.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>Tez keçidlər</h4>
+                <ul>
+                    <li><a href="index.html">Ana səhifə</a></li>
+                    <li><a href="mehsullar.html">Məhsullar</a></li>
+                    <li><a href="haqqimda.html">Haqqımızda</a></li>
+                    <li><a href="elaqe.html">Əlaqə</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Əlaqə</h4>
+                <ul>
+                    <li><i class="fas fa-phone"></i> +994 50 123 45 67</li>
+                    <li><i class="fas fa-envelope"></i> info@magazam.az</li>
+                    <li><i class="fas fa-map-marker-alt"></i> Bakı, Azərbaycan</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Mağazam. Bütün hüquqlar qorunur.</p>
+        </div>
+    </div>
 </footer>
+
+<!-- Cart Modal -->
+<div id="cartModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3><i class="fas fa-shopping-cart"></i> Səbətim</h3>
+        <div id="cart-items"></div>
+        <div class="cart-total">
+            <strong>Cəmi: <span id="cartTotal">0</span> AZN</strong>
+        </div>
+        <button id="clearCartBtn" class="btn-clear"><i class="fas fa-trash"></i> Səbəti təmizlə</button>
+        <button id="checkoutBtn" class="btn-checkout"><i class="fas fa-credit-card"></i> Sifarişi tamamla</button>
+    </div>
+</div>
 
 <script src="script.js"></script>
 </body>
