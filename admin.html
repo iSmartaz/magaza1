@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -34,6 +35,7 @@
         <div class="admin-login-box">
             <i class="fas fa-user-shield admin-icon"></i>
             <h2>Admin Girişi</h2>
+            <p class="login-subtitle">Zəhmət olmasa, daxil olmaq üçün məlumatlarınızı daxil edin</p>
             <div class="input-group">
                 <i class="fas fa-user"></i>
                 <input type="text" id="adminUsername" placeholder="İstifadəçi adı">
@@ -49,33 +51,208 @@
 
     <!-- Admin Panel Section -->
     <div id="adminPanel" class="admin-panel" style="display:none;">
+        <!-- Admin Header with Stats -->
         <div class="admin-header">
             <h2><i class="fas fa-tachometer-alt"></i> Admin Panel</h2>
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <i class="fas fa-box"></i>
+                    <div>
+                        <span id="totalProducts">0</span>
+                        <small>Məhsul</small>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-shopping-cart"></i>
+                    <div>
+                        <span id="totalOrders">0</span>
+                        <small>Sifariş</small>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <div>
+                        <span id="totalCustomers">0</span>
+                        <small>Müştəri</small>
+                    </div>
+                </div>
+            </div>
             <button id="logoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Çıxış</button>
         </div>
 
-        <!-- Add Product Section -->
-        <div class="admin-card">
-            <h3><i class="fas fa-plus-circle"></i> Yeni məhsul əlavə et</h3>
-            <div class="form-group">
-                <label>Məhsul adı</label>
-                <input type="text" id="newName" placeholder="Məs: Qış gödəkçəsi">
-            </div>
-            <div class="form-group">
-                <label>Qiymət (AZN)</label>
-                <input type="number" id="newPrice" placeholder="Məs: 89.99">
-            </div>
-            <div class="form-group">
-                <label>Şəkil URL</label>
-                <input type="text" id="newImage" placeholder="https://... və ya images/product.jpg">
-            </div>
-            <button id="addProductBtn" class="btn-add"><i class="fas fa-save"></i> Məhsulu əlavə et</button>
+        <!-- Tab Navigation -->
+        <div class="admin-tabs">
+            <button class="tab-btn active" data-tab="products"><i class="fas fa-box"></i> Məhsullar</button>
+            <button class="tab-btn" data-tab="add"><i class="fas fa-plus-circle"></i> Əlavə et</button>
+            <button class="tab-btn" data-tab="orders"><i class="fas fa-shopping-cart"></i> Sifarişlər</button>
+            <button class="tab-btn" data-tab="stats"><i class="fas fa-chart-line"></i> Statistikalar</button>
+            <button class="tab-btn" data-tab="settings"><i class="fas fa-cog"></i> Ayarlar</button>
         </div>
 
-        <!-- Products List Section -->
-        <div class="admin-card">
-            <h3><i class="fas fa-list"></i> Mövcud məhsullar</h3>
-            <div id="adminProductList" class="admin-product-list"></div>
+        <!-- Tab: Products List -->
+        <div id="productsTab" class="tab-content active">
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-list"></i> Mövcud məhsullar</h3>
+                    <div class="search-box-admin">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="adminSearch" placeholder="Məhsul axtar...">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="admin-table" id="adminProductsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Şəkil</th>
+                                <th>Məhsul adı</th>
+                                <th>Qiymət</th>
+                                <th>Kateqoriya</th>
+                                <th>Əməliyyatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminProductList"></tbody>
+                    </table>
+                </div>
+                <div class="pagination-admin" id="adminPagination"></div>
+            </div>
+        </div>
+
+        <!-- Tab: Add Product -->
+        <div id="addTab" class="tab-content">
+            <div class="admin-card">
+                <h3><i class="fas fa-plus-circle"></i> Yeni məhsul əlavə et</h3>
+                <form id="addProductForm" class="admin-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-tag"></i> Məhsul adı <span class="required">*</span></label>
+                            <input type="text" id="newName" placeholder="Məs: iPhone 15 Pro" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-dollar-sign"></i> Qiymət (AZN) <span class="required">*</span></label>
+                            <input type="number" id="newPrice" placeholder="Məs: 1299" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-image"></i> Şəkil URL</label>
+                            <input type="text" id="newImage" placeholder="https://... və ya images/product.jpg">
+                            <small>Şəkil linki daxil edin. Boş buraxsanız, default şəkil istifadə olunacaq.</small>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-tags"></i> Kateqoriya</label>
+                            <select id="newCategory">
+                                <option value="electronics">Elektronika</option>
+                                <option value="clothing">Geyim</option>
+                                <option value="accessories">Aksessuarlar</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-percent"></i> Endirim (%)</label>
+                            <input type="number" id="newDiscount" placeholder="0" value="0" min="0" max="90">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-chart-line"></i> Stok sayı</label>
+                            <input type="number" id="newStock" placeholder="10" value="10" min="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-align-left"></i> Məhsul haqqında qısa məlumat</label>
+                        <textarea id="newDescription" rows="3" placeholder="Məhsul haqqında qısa məlumat..."></textarea>
+                    </div>
+                    <button type="submit" id="addProductBtn" class="btn-add"><i class="fas fa-save"></i> Məhsulu əlavə et</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tab: Orders -->
+        <div id="ordersTab" class="tab-content">
+            <div class="admin-card">
+                <h3><i class="fas fa-shopping-cart"></i> Son sifarişlər</h3>
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Sifariş №</th>
+                                <th>Müştəri</th>
+                                <th>Tarix</th>
+                                <th>Məbləğ</th>
+                                <th>Status</th>
+                                <th>Əməliyyat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersList">
+                            <tr><td colspan="6" style="text-align:center;">Hələ sifariş yoxdur</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Statistics -->
+        <div id="statsTab" class="tab-content">
+            <div class="admin-card">
+                <h3><i class="fas fa-chart-line"></i> Satış statistikaları</h3>
+                <div class="stats-grid">
+                    <div class="stats-card">
+                        <i class="fas fa-chart-bar"></i>
+                        <div>
+                            <span id="statTotalProducts">0</span>
+                            <p>Ümumi məhsul</p>
+                        </div>
+                    </div>
+                    <div class="stats-card">
+                        <i class="fas fa-chart-line"></i>
+                        <div>
+                            <span id="statAvgPrice">0</span>
+                            <p>Orta qiymət</p>
+                        </div>
+                    </div>
+                    <div class="stats-card">
+                        <i class="fas fa-tag"></i>
+                        <div>
+                            <span id="statTotalValue">0</span>
+                            <p>Ümumi dəyər</p>
+                        </div>
+                    </div>
+                    <div class="stats-card">
+                        <i class="fas fa-percent"></i>
+                        <div>
+                            <span id="statDiscounted">0</span>
+                            <p>Endirimli məhsul</p>
+                        </div>
+                    </div>
+                </div>
+                <canvas id="salesChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Tab: Settings -->
+        <div id="settingsTab" class="tab-content">
+            <div class="admin-card">
+                <h3><i class="fas fa-cog"></i> Admin Ayarları</h3>
+                <form id="settingsForm" class="admin-form">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> İstifadəçi adı</label>
+                        <input type="text" id="settingUsername" value="admin">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Yeni şifrə</label>
+                        <input type="password" id="settingPassword" placeholder="Yeni şifrə daxil edin">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Şifrə təkrar</label>
+                        <input type="password" id="settingPasswordConfirm" placeholder="Şifrəni təkrarlayın">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Email bildiriş</label>
+                        <input type="email" id="settingEmail" placeholder="admin@magazam.az">
+                    </div>
+                    <button type="submit" class="btn-add"><i class="fas fa-save"></i> Ayarları yadda saxla</button>
+                </form>
+            </div>
         </div>
     </div>
 </main>
@@ -87,6 +264,9 @@
         </div>
     </div>
 </footer>
+
+<div id="toast" class="toast"></div>
+<div id="loadingSpinner" class="loading-spinner" style="display: none;"><div class="spinner"></div></div>
 
 <script src="script.js"></script>
 </body>
